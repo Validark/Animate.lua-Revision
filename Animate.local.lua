@@ -40,33 +40,15 @@ local sine = math.sin
 local LoadAnimation = Humanoid.LoadAnimation
 local SetDesiredAngle = RightShoulder.SetDesiredAngle
 
-local Cheer = newInstance("Animation", Character)
-Cheer.AnimationId = "rbxassetid://129423030"
-Cheer.Name = "Cheer"
+local Cheer, AnimationParent, Dance1, Dance2, Dance3 do
+	local CheerObject = newInstance("Animation", Character)
+	CheerObject.AnimationId = "rbxassetid://129423030"
+	CheerObject.Name = "Cheer"
 
-CheerTrack = LoadAnimation(Humanoid, Cheer) -- Create Animator Object to put stuff in
-AnimationParent = Humanoid.Animator
-Cheer.Parent = AnimationParent
+	Cheer = LoadAnimation(Humanoid, CheerObject) -- Create Animator Object to put stuff in
+	AnimationParent = Humanoid.Animator
+	CheerObject.Parent = AnimationParent
 
-local Play = CheerTrack.Play
-local Stop = CheerTrack.Stop
-local Destroy = CheerTrack.Destroy
-local AdjustSpeed = CheerTrack.AdjustSpeed
-
-local Connect = CheerTrack.KeyframeReached.Connect
-local function Disconnect(self)
-	Disconnect = self.Disconnect
-	Disconnect(self)
-end
-
--- Create Animation Instances
-local Climb = newInstance("Animation")
-Climb.AnimationId = "rbxassetid://180436334"
-Climb.Name = "Climb"
-Climb.Parent = AnimationParent
-Climb = LoadAnimation(Humanoid, Climb)
-
-local Dance1, Dance2, Dance3 do
 	local Dance1A = newInstance("Animation")
 	Dance1A.AnimationId = "rbxassetid://182435998"
 	Dance1A.Name = "Dance1A"
@@ -116,6 +98,25 @@ local Dance1, Dance2, Dance3 do
 	Dance2 = {LoadAnimation(Humanoid, Dance2A), LoadAnimation(Humanoid, Dance2B), LoadAnimation(Humanoid, Dance2C)}
 	Dance3 = {LoadAnimation(Humanoid, Dance3A), LoadAnimation(Humanoid, Dance3B), LoadAnimation(Humanoid, Dance3C)}
 end
+
+-- AnimationTrack / RBXScriptSignal functions
+local Play = Cheer.Play
+local Stop = Cheer.Stop
+local Destroy = Cheer.Destroy
+local Connect = Cheer.KeyframeReached.Connect
+local AdjustSpeed = Cheer.AdjustSpeed
+
+local function Disconnect(self)
+	Disconnect = self.Disconnect
+	Disconnect(self)
+end
+
+-- Create Animation Instances
+local Climb = newInstance("Animation")
+Climb.AnimationId = "rbxassetid://180436334"
+Climb.Name = "Climb"
+Climb.Parent = AnimationParent
+Climb = LoadAnimation(Humanoid, Climb)
 
 local Fall = newInstance("Animation")
 Fall.AnimationId = "rbxassetid://180436148"
@@ -269,8 +270,6 @@ function PlayAnimation(AnimationName, TransitionDuration) -- TODO: Check by gene
 		end
 
 		CurrentAnimationSpeed = 1
-
-		-- load it to the Humanoid; get AnimationTrack
 		CurrentAnimationTrack = Animation
 
 		-- play the animation
