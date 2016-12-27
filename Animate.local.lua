@@ -1,14 +1,20 @@
 -- @author Narrev
--- Rescripted!
+-- Animate.local.lua
+-- This should be in a localscript called `Animate`
+-- This should be placed in StarterPlayer.StarterCharacterScripts
 
 -- Config
 local JumpDuration = 0.3
 local FallTransitionTime = 0.3
 
--- Localize Functions
+-- Helper
+local Destroy = game.Destroy
 local WaitForChild = game.WaitForChild
 
--- Wait For Character To Load
+-- Random Seed
+math.randomseed(tick())
+
+-- Yield until Character Loads
 local Character = script.Parent
 local Torso = WaitForChild(Character, "Torso")
 local Neck = WaitForChild(Torso, "Neck")
@@ -23,368 +29,267 @@ local Pose = "Standing"
 local Halfpi = 0.5 * math.pi
 local CurrentAnimation = ""
 local CurrentAnimationTrack
-local CurrentAnimInstance
 local CurrentAnimationStopped
 local CurrentAnimationSpeed = 1
 
-local AnimationParent = Instance.new("Folder")
-AnimationParent.Name = "Animations"
+-- Localize Functions
+local newInstance = Instance.new
+local random = math.random
+local sine = math.sin
 
-local Cheer = Instance.new("Animation", AnimationParent)
+local LoadAnimation = Humanoid.LoadAnimation
+local SetDesiredAngle = RightShoulder.SetDesiredAngle
+
+local Cheer = newInstance("Animation", Character)
 Cheer.AnimationId = "rbxassetid://129423030"
 Cheer.Name = "Cheer"
 
-local Climb = Instance.new("Animation", AnimationParent)
+CheerTrack = LoadAnimation(Humanoid, Cheer) -- Create Animator Object to put stuff in
+AnimationParent = Humanoid.Animator
+Cheer.Parent = AnimationParent
+
+local Play = CheerTrack.Play
+local Stop = CheerTrack.Stop
+local Destroy = CheerTrack.Destroy
+local AdjustSpeed = CheerTrack.AdjustSpeed
+
+local Connect = CheerTrack.KeyframeReached.Connect
+local function Disconnect(self)
+	Disconnect = self.Disconnect
+	Disconnect(self)
+end
+
+-- Create Animation Instances
+local Climb = newInstance("Animation")
 Climb.AnimationId = "rbxassetid://180436334"
 Climb.Name = "Climb"
+Climb.Parent = AnimationParent
+Climb = LoadAnimation(Humanoid, Climb)
 
-local Dance1A = Instance.new("Animation", AnimationParent)
-Dance1A.AnimationId = "rbxassetid://182435998"
-Dance1A.Name = "Dance1A"
+local Dance1, Dance2, Dance3 do
+	local Dance1A = newInstance("Animation")
+	Dance1A.AnimationId = "rbxassetid://182435998"
+	Dance1A.Name = "Dance1A"
+	Dance1A.Parent = AnimationParent
 
-local Dance1B = Instance.new("Animation", AnimationParent)
-Dance1B.AnimationId = "rbxassetid://182491037"
-Dance1B.Name = "Dance1B"
+	local Dance1B = newInstance("Animation")
+	Dance1B.AnimationId = "rbxassetid://182491037"
+	Dance1B.Name = "Dance1B"
+	Dance1B.Parent = AnimationParent
 
-local Dance1C = Instance.new("Animation", AnimationParent)
-Dance1C.AnimationId = "rbxassetid://182491065"
-Dance1C.Name = "Dance1C"
+	local Dance1C = newInstance("Animation")
+	Dance1C.AnimationId = "rbxassetid://182491065"
+	Dance1C.Name = "Dance1C"
+	Dance1C.Parent = AnimationParent
 
-local Dance2A = Instance.new("Animation", AnimationParent)
-Dance2A.AnimationId = "rbxassetid://182436842"
-Dance2A.Name = "Dance2A"
+	local Dance2A = newInstance("Animation")
+	Dance2A.AnimationId = "rbxassetid://182436842"
+	Dance2A.Name = "Dance2A"
+	Dance2A.Parent = AnimationParent
 
-local Dance2B = Instance.new("Animation", AnimationParent)
-Dance2B.AnimationId = "rbxassetid://182491248"
-Dance2B.Name = "Dance2B"
+	local Dance2B = newInstance("Animation")
+	Dance2B.AnimationId = "rbxassetid://182491248"
+	Dance2B.Name = "Dance2B"
+	Dance2B.Parent = AnimationParent
 
-local Dance2C = Instance.new("Animation", AnimationParent)
-Dance2C.AnimationId = "rbxassetid://182491277"
-Dance2C.Name = "Dance2C"
+	local Dance2C = newInstance("Animation")
+	Dance2C.AnimationId = "rbxassetid://182491277"
+	Dance2C.Name = "Dance2C"
+	Dance2C.Parent = AnimationParent
 
-local Dance3A = Instance.new("Animation", AnimationParent)
-Dance3A.AnimationId = "rbxassetid://182436935"
-Dance3A.Name = "Dance3A"
+	local Dance3A = newInstance("Animation")
+	Dance3A.AnimationId = "rbxassetid://182436935"
+	Dance3A.Name = "Dance3A"
+	Dance3A.Parent = AnimationParent
 
-local Dance3B = Instance.new("Animation", AnimationParent)
-Dance3B.AnimationId = "rbxassetid://182491368"
-Dance3B.Name = "Dance3B"
+	local Dance3B = newInstance("Animation")
+	Dance3B.AnimationId = "rbxassetid://182491368"
+	Dance3B.Name = "Dance3B"
+	Dance3B.Parent = AnimationParent
 
-local Dance3C = Instance.new("Animation", AnimationParent)
-Dance3C.AnimationId = "rbxassetid://182491423"
-Dance3C.Name = "Dance3C"
+	local Dance3C = newInstance("Animation")
+	Dance3C.AnimationId = "rbxassetid://182491423"
+	Dance3C.Name = "Dance3C"
+	Dance3C.Parent = AnimationParent
 
-local Fall = Instance.new("Animation", AnimationParent)
+	Dance1 = {LoadAnimation(Humanoid, Dance1A), LoadAnimation(Humanoid, Dance1B), LoadAnimation(Humanoid, Dance1C)}
+	Dance2 = {LoadAnimation(Humanoid, Dance2A), LoadAnimation(Humanoid, Dance2B), LoadAnimation(Humanoid, Dance2C)}
+	Dance3 = {LoadAnimation(Humanoid, Dance3A), LoadAnimation(Humanoid, Dance3B), LoadAnimation(Humanoid, Dance3C)}
+end
+
+local Fall = newInstance("Animation")
 Fall.AnimationId = "rbxassetid://180436148"
 Fall.Name = "Fall"
+Fall.Parent = AnimationParent
+Fall = LoadAnimation(Humanoid, Fall)
 
-local IdleA = Instance.new("Animation", AnimationParent)
+local IdleA = newInstance("Animation")
 IdleA.AnimationId = "rbxassetid://180435571"
 IdleA.Name = "IdleA"
+IdleA.Parent = AnimationParent
+IdleA = LoadAnimation(Humanoid, IdleA)
 
-local IdleB = Instance.new("Animation", AnimationParent)
+local IdleB = newInstance("Animation")
 IdleB.AnimationId = "rbxassetid://180435792"
 IdleB.Name = "IdleB"
+IdleB.Parent = AnimationParent
+IdleB = LoadAnimation(Humanoid, IdleB)
 
-local Jump = Instance.new("Animation", AnimationParent)
+local Jump = newInstance("Animation")
 Jump.AnimationId = "rbxassetid://125750702"
 Jump.Name = "Jump"
+Jump.Parent = AnimationParent
+Jump = LoadAnimation(Humanoid, Jump)
 
-local Laugh = Instance.new("Animation", AnimationParent)
+local Laugh = newInstance("Animation")
 Laugh.AnimationId = "rbxassetid://129423131"
 Laugh.Name = "Laugh"
+Laugh.Parent = AnimationParent
+Laugh = LoadAnimation(Humanoid, Laugh)
 
-local Point = Instance.new("Animation", AnimationParent)
+local Point = newInstance("Animation")
 Point.AnimationId = "rbxassetid://128853357"
 Point.Name = "Point"
+Point.Parent = AnimationParent
+Point = LoadAnimation(Humanoid, Point)
 
-local Run = Instance.new("Animation", AnimationParent)
-Run.AnimationId = "run.xml"
-Run.Name = "Run"
-
-local Sit = Instance.new("Animation", AnimationParent)
+local Sit = newInstance("Animation")
 Sit.AnimationId = "rbxassetid://178130996"
 Sit.Name = "Sit"
+Sit.Parent = AnimationParent
+Sit = LoadAnimation(Humanoid, Sit)
 
-local Walk = Instance.new("Animation", AnimationParent)
+local Walk = newInstance("Animation")
 Walk.AnimationId = "rbxassetid://180426354"
 Walk.Name = "Walk"
+Walk.Parent = AnimationParent
+Walk = LoadAnimation(Humanoid, Walk)
 
-local Wave = Instance.new("Animation", AnimationParent)
+local Wave = newInstance("Animation")
 Wave.AnimationId = "rbxassetid://128777973"
 Wave.Name = "Wave"
-
-AnimationParent.Parent = Character
-
-local Animations = {
-	cheer = {
-		{
-			AnimationObject = Cheer;
-			Weight = 10
-		};
-		Connections = {};
-		TotalWeight = 10
-	};
-
-	climb = {
-		{
-			AnimationObject = Climb;
-			Weight = 10
-		};
-		Connections = {};
-		TotalWeight = 10
-	};
-
-	dance1 = {
-		{
-			AnimationObject = Dance1A;
-			Weight = 10
-		};
-		{
-			AnimationObject = Dance1B;
-			Weight = 10
-		};
-		{
-			AnimationObject = Dance1C;
-			Weight = 10
-		};
-		Connections = {};
-		TotalWeight = 30
-	};
-
-	dance2 = {
-		{
-			AnimationObject = Dance2A;
-			Weight = 10
-		};
-		{
-			AnimationObject = Dance2B;
-			Weight = 10
-		};
-		{
-			AnimationObject = Dance2C;
-			Weight = 10
-		};
-		Connections = {};
-		TotalWeight = 30
-	};
-
-	dance3 = {
-		{
-			AnimationObject = Dance3A;
-			Weight = 10
-		};
-		{
-			AnimationObject = Dance3B;
-			Weight = 10
-		};
-		{
-			AnimationObject = Dance3C;
-			Weight = 10
-		};
-		Connections = {};
-		TotalWeight = 30
-	};
-
-	fall = {
-		{
-			AnimationObject = Fall;
-			Weight = 10
-		};
-		Connections = {};
-		TotalWeight = 10
-	};
-
-	idle = {
-		{
-			AnimationObject = IdleA;
-			Weight = 9
-		};
-		{
-			AnimationObject = IdleB;
-			Weight = 1
-		};
-		Connections = {};
-		TotalWeight = 10
-	};
-
-	jump = {
-		{
-			AnimationObject = Jump;
-			Weight = 10
-		};
-		Connections = {};
-		TotalWeight = 10
-	};
-
-	laugh = {
-		{
-			AnimationObject = Laugh;
-			Weight = 10
-		};
-		Connections = {};
-		TotalWeight = 10
-	};
-
-	point = {
-		{
-			AnimationObject = Point;
-			Weight = 10
-		};
-		Connections = {};
-		TotalWeight = 10
-	};
-
-	run = {
-		{
-			AnimationObject = Run;
-			Weight = 10
-		};
-		Connections = {};
-		TotalWeight = 10
-	};
-
-	sit = {
-		{
-			AnimationObject = Sit;
-			Weight = 10
-		};
-		Connections = {};
-		TotalWeight = 10
-	};
-
-	walk = {
-		{
-			AnimationObject = Walk;
-			Weight = 10
-		};
-		Connections = {};
-		TotalWeight = 10
-	};
-
-	wave = {
-		{
-			AnimationObject = Wave;
-			Weight = 10
-		};
-		Connections = {};
-		TotalWeight = 10
-	};
-}
-
-local dances = {
-	"dance1";
-	"dance2";
-	"dance3";
-}
+Wave.Parent = AnimationParent
+Wave = LoadAnimation(Humanoid, Wave)
 
 local JumpAnimationTime = 0
 
 -- Existance in this list signifies that it is an emote, the value indicates if it is a looping emote
 local Emotes = {wave = false, point = false, dance1 = true, dance2 = true, dance3 = true, laugh = false, cheer = false}
 
--- ANIMATION
-
 -- functions
-function StopAllAnimations()
+local function StopAllAnimations()
 	local PreviousAnimation = CurrentAnimation
 	CurrentAnimation = ""
-	CurrentAnimInstance = nil
 
 	-- return to idle if finishing an emote
 	if Emotes[PreviousAnimation] == false then
 		PreviousAnimation = "idle"
 	end
-	
+
 	if CurrentAnimationStopped then
-		CurrentAnimationStopped:Disconnect()
+		Disconnect(CurrentAnimationStopped)
 	end
 
 	if CurrentAnimationTrack then
-		CurrentAnimationTrack:Stop()
-		CurrentAnimationTrack:Destroy()
+		Stop(CurrentAnimationTrack)
+		Destroy(CurrentAnimationTrack)
 		CurrentAnimationTrack = nil
 	end
-	
+
 	return PreviousAnimation
 end
 
-function SetAnimationSpeed(AnimationSpeed)
+local function SetAnimationSpeed(AnimationSpeed)
 	if AnimationSpeed ~= CurrentAnimationSpeed then
 		CurrentAnimationSpeed = AnimationSpeed
-		CurrentAnimationTrack:AdjustSpeed(CurrentAnimationSpeed)
+		AdjustSpeed(CurrentAnimationTrack, CurrentAnimationSpeed)
 	end
 end
 
-function CurrentAnimationTrackStopped()
-	-- return to idle if finishing an emote
-	if Emotes[CurrentAnimation] == false then
-		CurrentAnimation = "idle"
-	end
+local PlayAnimation
 
-	local AnimationSpeed = CurrentAnimationSpeed
-	PlayAnimation(CurrentAnimation, 0)
-	SetAnimationSpeed(AnimationSpeed)
-end
-
--- Preload animations
-function PlayAnimation(AnimationName, TransitionDuration)
-
-	local Animation = Animations[AnimationName]
-	local NumAnimations = #Animation
-	local AnimationObject
-	
-	if NumAnimations > 1 then
-		local index = math.random(1, Animation.TotalWeight)
-
-		for a = 1, NumAnimations do
-			index = index - Animation[a].Weight
-			if index <= 0 then
-				AnimationObject = Animation[a].AnimationObject
-				break
-			end
+local function CurrentAnimationKeyFrameReached(KeyFrameName)
+	if KeyFrameName == "End" then
+		-- return to idle if finishing an emote
+		if Emotes[CurrentAnimation] == false then
+			CurrentAnimation = "idle"
 		end
-	else
-		AnimationObject = Animation[1].AnimationObject
+
+		local AnimationSpeed = CurrentAnimationSpeed
+		PlayAnimation(CurrentAnimation, 0)
+		SetAnimationSpeed(AnimationSpeed)
 	end
-	
+end
+
+function PlayAnimation(AnimationName, TransitionDuration) -- TODO: Check by general AnimationName at the beginning
+	local Animation
+	if AnimationName == "walk" then
+		Animation = Walk
+	elseif AnimationName == "idle" then
+		if random(1, 10) == 10 then
+			Animation = IdleB
+		else
+			Animation = IdleA
+		end
+	elseif AnimationName == "climb" then
+		Animation = Climb
+	elseif AnimationName == "fall" then
+		Animation = Fall
+	elseif AnimationName == "jump" then
+		Animation = Jump
+	elseif AnimationName == "sit" then
+		Animation = Sit
+	elseif AnimationName == "cheer" then
+		Animation = Cheer
+	elseif AnimationName == "dance1" then
+		Animation = Dance1[random(1, 3)]
+	elseif AnimationName == "dance2" then
+		Animation = Dance2[random(1, 3)]
+	elseif AnimationName == "dance3" then
+		Animation = Dance3[random(1, 3)]
+	elseif AnimationName == "laugh" then
+		Animation = Laugh
+	elseif AnimationName == "point" then
+		Animation = Point
+	elseif AnimationName == "wave" then
+		Animation = Wave
+	end
+
 	-- switch animation
-	if AnimationObject ~= CurrentAnimInstance then
+	if Animation ~= CurrentAnimationTrack then
 
 		-- set up keyframe Name triggers
 		if CurrentAnimationStopped then
-			CurrentAnimationStopped:Disconnect()
+			Disconnect(CurrentAnimationStopped)
 		end
 
 		if CurrentAnimationTrack then
-			CurrentAnimationTrack:Stop(TransitionDuration)
-			CurrentAnimationTrack:Destroy()
+			Stop(CurrentAnimationTrack, TransitionDuration)
+			Destroy(CurrentAnimationTrack)
 		end
 
 		CurrentAnimationSpeed = 1
 
 		-- load it to the Humanoid; get AnimationTrack
-		CurrentAnimationTrack = Humanoid:LoadAnimation(AnimationObject)
+		CurrentAnimationTrack = Animation
 
 		-- play the animation
-		CurrentAnimationTrack:Play(TransitionDuration)
+		Play(CurrentAnimationTrack, TransitionDuration)
 		CurrentAnimation = AnimationName
-		CurrentAnimInstance = AnimationObject
-		
-		CurrentAnimationStopped = CurrentAnimationTrack.Stopped:Connect(CurrentAnimationTrackStopped)
+		CurrentAnimationStopped = Connect(CurrentAnimationTrack.KeyframeReached, CurrentAnimationKeyFrameReached)
 	end
 end
 
 -- Connect events
-Humanoid.Died:Connect(function()
+Connect(Humanoid.Died, function()
 	Pose = "Dead"
 end)
 
-Humanoid.Running:Connect(function(speed)
-	if speed > 0.01 then
+Connect(Humanoid.Running, function(AnimationSpeed)
+	if AnimationSpeed > 0.01 then
 		PlayAnimation("walk", 0.1)
-		if CurrentAnimInstance == Walk then
-			SetAnimationSpeed(speed / 14.5)
+		if CurrentAnimationTrack == Walk then
+			SetAnimationSpeed(AnimationSpeed / 14.5)
 		end
 		Pose = "Running"
 	else
@@ -395,54 +300,52 @@ Humanoid.Running:Connect(function(speed)
 	end
 end)
 
-Humanoid.Jumping:Connect(function()
+Connect(Humanoid.Jumping, function()
 	PlayAnimation("jump", 0.1)
 	JumpAnimationTime = JumpDuration
 	Pose = "Jumping"
 end)
 
-Humanoid.Climbing:Connect(function(speed)
+Connect(Humanoid.Climbing, function(AnimationSpeed)
 	PlayAnimation("climb", 0.1)
-	SetAnimationSpeed(speed / 12)
+	SetAnimationSpeed(AnimationSpeed / 12)
 	Pose = "Climbing"
 end)
 
-Humanoid.GettingUp:Connect(function()
+Connect(Humanoid.GettingUp, function()
 	Pose = "GettingUp"
 end)
 
-Humanoid.FreeFalling:Connect(function()
+Connect(Humanoid.FreeFalling, function()
 	if JumpAnimationTime <= 0 then
 		PlayAnimation("fall", FallTransitionTime)
 	end
 	Pose = "FreeFall"
 end)
 
-Humanoid.FallingDown:Connect(function()
+Connect(Humanoid.FallingDown, function()
 	Pose = "FallingDown"
 end)
 
-Humanoid.Seated:Connect(function()
+Connect(Humanoid.Seated, function()
 	Pose = "Seated"
 end)
 
-Humanoid.PlatformStanding:Connect(function()
+Connect(Humanoid.PlatformStanding, function()
 	Pose = "PlatformStanding"
 end)
 
-Humanoid.Swimming:Connect(function(speed)
-	if speed > 0 then
+Connect(Humanoid.Swimming, function(AnimationSpeed)
+	if AnimationSpeed > 0 then
 		Pose = "Running"
 	else
 		Pose = "Standing"
 	end
 end)
 
-local RunService = game:GetService("RunService")
-
-RunService.Heartbeat:Connect(function(step)
+Connect(game:GetService("RunService").Heartbeat, function(Delta)
   	if JumpAnimationTime > 0 then
-  		JumpAnimationTime = JumpAnimationTime - step
+  		JumpAnimationTime = JumpAnimationTime - Delta
   	end
 
 	if Pose == "FreeFall" and JumpAnimationTime <= 0 then
@@ -454,14 +357,10 @@ RunService.Heartbeat:Connect(function(step)
 		PlayAnimation("walk", 0.1)
 	elseif Pose == "Dead" or Pose == "GettingUp" or Pose == "FallingDown" or Pose == "Seated" or Pose == "PlatformStanding" then
 		StopAllAnimations()
-		local DesiredAngle = 0.1 * math.sin(step)
-		RightShoulder:SetDesiredAngle(DesiredAngle)
-		LeftShoulder:SetDesiredAngle(DesiredAngle)
-		RightHip:SetDesiredAngle(-DesiredAngle)
-		LeftHip:SetDesiredAngle(-DesiredAngle)
+		local DesiredAngle = 0.1 * sine(Delta)
+		SetDesiredAngle(RightShoulder, DesiredAngle)
+		SetDesiredAngle(LeftShoulder, DesiredAngle)
+		SetDesiredAngle(RightHip, -DesiredAngle)
+		SetDesiredAngle(LeftHip, -DesiredAngle)
 	end
 end)
-
--- initialize to idle
-PlayAnimation("idle", 0.1)
-Pose = "Standing"
