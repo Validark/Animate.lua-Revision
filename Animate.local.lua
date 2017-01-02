@@ -99,12 +99,12 @@ local CurrentAnimationSpeed = 1
 local JumpAnimationTime = 0
 
 -- functions
---[[local function SetAnimationSpeed(AnimationSpeed)
+local function SetAnimationSpeed(AnimationSpeed)
 	if AnimationSpeed ~= CurrentAnimationSpeed then
 		CurrentAnimationSpeed = AnimationSpeed
 		AdjustSpeed(CurrentAnimationTrack, CurrentAnimationSpeed)
 	end
-end]]
+end
 
 local PlayAnimation
 
@@ -153,7 +153,14 @@ function PlayAnimation(Animation, TransitionDuration, AnimationSpeed)
 		CurrentAnimationSpeed = AnimationSpeed or 1
 		CurrentAnimationTrack = Animation
 
-		Play(Animation, TransitionDuration, 1, CurrentAnimationSpeed)
+		if AnimationSpeed then
+			CurrentAnimationSpeed = AnimationSpeed
+			AdjustSpeed(Animation, AnimationSpeed)
+		else
+			CurrentAnimationSpeed = 1
+		end
+
+		Play(Animation, TransitionDuration)
 		CurrentAnimationStopped = Connect(Animation.KeyframeReached, CurrentAnimationKeyFrameReached)
 	end
 end
